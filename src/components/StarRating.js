@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 
 import Star from "./Star";
@@ -44,7 +44,6 @@ function StarRating({
       setHoverRating(0);
     }
     setRating((prevIndex) => (prevIndex === index ? 0 : index));
-    onSetRating((prevIndex) => (prevIndex === index ? 0 : index));
   };
 
   const onStarHover = (index) => {
@@ -55,6 +54,8 @@ function StarRating({
     if (hoverEnabled) return;
     setHoverEnabled(true);
   };
+
+  useEffect(() => onSetRating(rating), [rating, onSetRating]);
 
   return (
     <div style={containerStyle} onMouseOver={enableHover}>

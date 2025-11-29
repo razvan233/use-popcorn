@@ -1,13 +1,15 @@
-import { useState } from "react";
-function Search() {
-  const [query, setQuery] = useState("");
+function Search({ query, onSearch }) {
   return (
     <input
       className="search"
       type="text"
       placeholder="Search movies..."
       value={query}
-      onChange={setQuery}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          onSearch(e.target.value);
+        }
+      }}
     />
   );
 }

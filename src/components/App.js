@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import NavBar from "./NavBar";
 import Main from "./Main";
 import { tempMovieData, tempWatchedData } from "../utils/initialData";
@@ -7,21 +7,86 @@ import NoOfResults from "./NoOfResults";
 import Search from "./Search";
 import MovieList from "./MovieList";
 import WatchList from "./WatchList";
+import { API_KEY, BASE_URL } from "../utils/api";
+import Loader from "./Loader";
+import ErrorMessage from "./ErrorMessage";
+import MovieDetails from "./MovieDetails";
 
 export default function App() {
-  const [movies, setMovies] = useState(tempMovieData);
+  const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState(tempWatchedData);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [query, setQuery] = useState("");
+  const [selectedID, setSelectedID] = useState(null);
+
+  useEffect(() => {
+    setErrorMessage("");
+
+    const fetchMovies = () => {
+      const url = `${BASE_URL}/?apikey=${API_KEY}&s=${query}`;
+      if (!BASE_URL || !API_KEY) {
+        console.error("Missing API configuration:", { BASE_URL, API_KEY });
+        return;
+      }
+      fetch(url)
+        .then(async (res) => {
+          const data = await res.json();
+          console.log(data);
+          if (data.Response === "False") throw new Error("Movie not found");
+          console.log(data.Search);
+          setMovies(data.Search);
+          setIsLoading(false);
+        })
+        .catch((err) => {
+          console.error("Fetch error:", err);
+          setIsLoading(false);
+          setErrorMessage(err.message);
+        });
+    };
+
+    if (query.length < 3) {
+      setMovies([]);
+      setIsLoading(false);
+      return;
+    }
+
+    fetchMovies();
+  }, [query]);
 
   return (
     <>
       <NavBar>
         <Logo />
-        <Search />
+        <Search onSearch={setQuery} />
         <NoOfResults moviesLength={movies.length} />
       </NavBar>
       <Main>
-        <MovieList movies={movies} />
-        <WatchList watched={watched} />
+        {isLoading && <Loader />}
+        {!isLoading && !errorMessage && (
+          <MovieList movies={movies} onMovieSelect={setSelectedID} />
+        )}
+        {errorMessage && <ErrorMessage message={errorMessage} />}
+        {selectedID ? (
+          <MovieDetails
+            selectedID={selectedID}
+            onCloseDetails={() => setSelectedID(null)}
+            onMarkAsWatched={setWatched}
+            isInWatchList={
+              watched.filter((wm) => wm.imdbID === selectedID).length === 1
+            }
+            currentRating={
+              watched.filter((wm) => wm.imdbID === selectedID)[0]?.userRating
+            }
+          />
+        ) : (
+          <WatchList
+            watched={watched}
+            handleRemoveWatchedMovie={(imdbID) => {
+              setWatched((m) => m.filter((wm) => wm.imdbID !== imdbID));
+            }}
+          />
+        )}
       </Main>
     </>
   );

@@ -2,12 +2,12 @@ import Movie from "./Movie";
 import Box from "./Box";
 import InfoAttribute from "./InfoAttribute";
 
-function MovieList({ movies }) {
+function MovieList({ movies, onMovieSelect }) {
   return (
     <Box>
-      <ul className="list">
-        {movies?.map((movie) => (
-          <Movie key={movie.imdbID} movie={movie}>
+      <ul className="list list-movies">
+        {movies?.map((movie, index) => (
+          <Movie key={index} movie={movie} onMovieSelect={onMovieSelect}>
             <InfoAttribute
               info={{
                 emoji: "🗓️",
