@@ -26,7 +26,7 @@ function MovieDetails({
           Title: movieDetails?.Title,
           Year: movieDetails?.Year,
           Poster: movieDetails?.Poster,
-          runtime: Number(movieDetails?.Runtime.split(" ")[0]),
+          runtime: Number(movieDetails?.Runtime.split(" ")[0]) || 0,
           imdbRating: Number(movieDetails?.imdbRating),
           userRating: Number(rating),
         },

@@ -9,7 +9,12 @@ function WatchList({ watched, handleRemoveWatchedMovie }) {
   const avgUserRating = average(
     watched.map((movie) => movie.userRating)
   ).toFixed(2);
-  const avgRuntime = average(watched.map((movie) => movie.runtime)).toFixed(2);
+  // Consider only movies with a positive runtime when averaging.
+  // Some movies may have `runtime` missing or set to 0 — exclude those.
+  const runtimes = watched
+    .map((movie) => Number(movie.runtime))
+    .filter((rt) => rt > 0);
+  const avgRuntime = runtimes.length ? average(runtimes).toFixed(2) : "N/A";
   return (
     <Box>
       <>
@@ -20,7 +25,10 @@ function WatchList({ watched, handleRemoveWatchedMovie }) {
               { emoji: "#️⃣", value: watched.length },
               { emoji: "⭐️", value: avgImdbRating },
               { emoji: "🌟", value: avgUserRating },
-              { emoji: "⏳", value: avgRuntime },
+              {
+                emoji: "⏳",
+                value: avgRuntime === "N/A" ? "N/A" : `${avgRuntime} min`,
+              },
             ]}
           />
         </div>
@@ -32,7 +40,13 @@ function WatchList({ watched, handleRemoveWatchedMovie }) {
                   infos={[
                     { emoji: "⭐️", value: movie.imdbRating },
                     { emoji: "🌟", value: movie.userRating },
-                    { emoji: "⏳", value: movie.runtime },
+                    {
+                      emoji: "⏳",
+                      value:
+                        Number(movie.runtime) > 0
+                          ? `${movie.runtime} min`
+                          : "N/A",
+                    },
                   ]}
                 />
                 <button
