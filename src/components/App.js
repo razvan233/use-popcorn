@@ -36,8 +36,9 @@ export default function App() {
           setMovies(data.Search);
         })
         .catch((err) => {
+          if (err.name === "AbortError") return;
+          setErrorMessage(err.message);
           console.error("Fetch error:", err);
-          if (err.name !== "AbortError") setErrorMessage(err.message);
         })
         .finally(() => setIsLoading(false));
     };
@@ -48,10 +49,19 @@ export default function App() {
       return;
     }
 
+    setSelectedID(0);
     fetchMovies();
 
     return () => reqController.abort();
   }, [query]);
+
+  useEffect(() => {
+    const eventHandler = (e) => {
+      if (e.key === "Escape") setSelectedID(0);
+    };
+    document.addEventListener("keydown", eventHandler);
+    return () => document.removeEventListener("keydown", eventHandler);
+  }, []);
 
   return (
     <>
