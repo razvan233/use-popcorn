@@ -13,7 +13,7 @@ function Search({ query, onSearch }) {
       document.addEventListener("keydown", handleKeyEvent);
     };
     return () => document.removeEventListener("keydown", handleKeyEvent);
-  }, [inputRef, onSearch]);
+  }, [onSearch]);
 
   return (
     <input
