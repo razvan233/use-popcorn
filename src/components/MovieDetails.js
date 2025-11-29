@@ -3,6 +3,7 @@ import Box from "./Box";
 import { API_KEY, BASE_URL } from "../utils/api";
 import StarRating from "./StarRating";
 import Loader from "./Loader";
+import ErrorMessage from "./ErrorMessage";
 
 function MovieDetails({
   selectedID,
@@ -14,24 +15,36 @@ function MovieDetails({
   const [movieDetails, setMovieDetails] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [rating, setRating] = useState(currentRating);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   const handleOnClick = () => {
-    onMarkAsWatched((watchedMovies) => {
-      if (isInWatchList)
-        return watchedMovies.filter((wm) => wm.imdbID !== selectedID);
-      return [
-        ...watchedMovies,
-        {
-          imdbID: movieDetails?.imdbID,
-          Title: movieDetails?.Title,
-          Year: movieDetails?.Year,
-          Poster: movieDetails?.Poster,
-          runtime: Number(movieDetails?.Runtime.split(" ")[0]) || 0,
-          imdbRating: Number(movieDetails?.imdbRating),
-          userRating: Number(rating),
-        },
-      ];
-    });
+    try {
+      // Safely extract runtime (in minutes) if available
+      const runtime = movieDetails?.Runtime
+        ? Number(String(movieDetails.Runtime).split(" ")[0]) || 0
+        : 0;
+
+      onMarkAsWatched((watchedMovies) => {
+        if (isInWatchList)
+          return watchedMovies.filter((wm) => wm.imdbID !== selectedID);
+        return [
+          ...watchedMovies,
+          {
+            imdbID: movieDetails?.imdbID,
+            Title: movieDetails?.Title,
+            Year: movieDetails?.Year,
+            Poster: movieDetails?.Poster,
+            runtime,
+            imdbRating: Number(movieDetails?.imdbRating) || 0,
+            userRating: Number(rating) || 0,
+          },
+        ];
+      });
+      // clear any previous error on successful add/remove
+      if (errorMessage) setErrorMessage(null);
+    } catch (err) {
+      setErrorMessage(err?.message || String(err));
+    }
   };
 
   useEffect(() => {
@@ -41,21 +54,25 @@ function MovieDetails({
   useEffect(() => {
     const getMovieDetails = async () => {
       setIsLoading(true);
-      const url = `${BASE_URL}/?apikey=${API_KEY}&i=${selectedID}`;
-      if (!BASE_URL || !API_KEY) {
-        console.error("Missing API configuration:", { BASE_URL, API_KEY });
-        return;
+      setErrorMessage(null);
+      try {
+        if (!BASE_URL || !API_KEY) {
+          throw new Error(
+            "Missing API configuration: set REACT_APP_BASE_URL and REACT_APP_API_KEY"
+          );
+        }
+        const url = `${BASE_URL}/?apikey=${API_KEY}&i=${selectedID}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.Response === "False")
+          throw new Error(data.Error || "Movie not found");
+        setMovieDetails(data);
+      } catch (err) {
+        console.error("Fetch error:", err);
+        setErrorMessage(err?.message || String(err));
+      } finally {
+        setIsLoading(false);
       }
-      fetch(url)
-        .then(async (res) => {
-          const data = await res.json();
-          if (data.Response === "False") throw new Error("Movie not found");
-          setMovieDetails(data);
-        })
-        .catch((err) => {
-          console.error("Fetch error:", err);
-        })
-        .finally(() => setIsLoading(false));
     };
     getMovieDetails();
   }, [selectedID]);
@@ -71,7 +88,7 @@ function MovieDetails({
   if (isLoading) {
     return <Loader />;
   }
-
+  if (errorMessage) return <ErrorMessage message={errorMessage} />;
   return (
     <Box>
       <div className="details">
