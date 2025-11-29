@@ -51,7 +51,14 @@ Opens [http://localhost:3000](http://localhost:3000) in your browser. The app re
 npm test
 ```
 
-Launches the interactive test runner. Note: Only CRA scaffolding is present; no test coverage currently exists.
+Launches the interactive test runner. The project includes comprehensive test coverage with **81 passing tests** across 14 test files, covering all components and utilities.
+
+**Test Files:**
+
+- **Component Tests** (`src/__tests__/components/`): Logo, Search, Movie, MovieList, MovieDetails, WatchList, StarRating, Box, NavBar, Main, Loader, ErrorMessage, NoOfResults
+- **Utility Tests** (`src/__tests__/utils/`): Functions (average calculation)
+
+Tests verify rendering, user interactions, prop handling, and callback functionality.
 
 ### Building for Production
 
@@ -65,6 +72,9 @@ Creates an optimized production build in the `build` folder.
 
 ```
 src/
+├── __tests__/              # Test suite
+│   ├── components/         # Component tests (13 files)
+│   └── utils/              # Utility tests (1 file)
 ├── components/
 │   ├── App.js              # Main state container
 │   ├── NavBar.js           # Header with logo and search
@@ -105,6 +115,17 @@ All state is centralized in `App.js`:
 4. **Management**: Delete from WatchList → Filter and update state
 
 ## Development Patterns
+
+### Testing
+
+All components have comprehensive test coverage using React Testing Library:
+
+- **Component rendering** - Verify correct DOM output
+- **User interactions** - Test clicks, typing, and hover events
+- **Props and callbacks** - Ensure correct prop passing and handler invocation
+- **State changes** - Verify UI updates on state changes
+
+Run tests with `npm test` or `npm test -- --watchAll=false` for CI environments.
 
 ### Prop Drilling
 
