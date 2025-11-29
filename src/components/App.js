@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import NavBar from "./NavBar";
 import Main from "./Main";
-import { tempMovieData, tempWatchedData } from "../utils/initialData";
 import Logo from "./Logo";
 import NoOfResults from "./NoOfResults";
 import Search from "./Search";
@@ -14,7 +13,7 @@ import MovieDetails from "./MovieDetails";
 
 export default function App() {
   const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState(tempWatchedData);
+  const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [query, setQuery] = useState("");
