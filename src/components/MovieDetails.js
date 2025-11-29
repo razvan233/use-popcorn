@@ -49,7 +49,6 @@ function MovieDetails({
       fetch(url)
         .then(async (res) => {
           const data = await res.json();
-          console.log(data);
           if (data.Response === "False") throw new Error("Movie not found");
           setMovieDetails(data);
         })

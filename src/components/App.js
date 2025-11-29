@@ -31,9 +31,7 @@ export default function App() {
       fetch(url)
         .then(async (res) => {
           const data = await res.json();
-          console.log(data);
           if (data.Response === "False") throw new Error("Movie not found");
-          console.log(data.Search);
           setMovies(data.Search);
           setIsLoading(false);
         })
