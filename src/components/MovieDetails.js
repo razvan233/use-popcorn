@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Box from "./Box";
 import { API_KEY, BASE_URL } from "../utils/api";
 import StarRating from "./StarRating";
@@ -16,6 +16,8 @@ function MovieDetails({
   const [isLoading, setIsLoading] = useState(false);
   const [rating, setRating] = useState(currentRating);
   const [errorMessage, setErrorMessage] = useState(null);
+
+  const countRef = useRef(0);
 
   const handleOnClick = () => {
     try {
@@ -38,6 +40,7 @@ function MovieDetails({
             runtime,
             imdbRating: Number(movieDetails?.imdbRating) || 0,
             userRating: Number(rating) || 0,
+            countRatingDecisions: countRef.current,
           },
         ];
         return result;
@@ -48,6 +51,11 @@ function MovieDetails({
       setErrorMessage(err?.message || String(err));
     }
   };
+
+  useEffect(() => {
+    if (!rating) return;
+    countRef.current += 1;
+  }, [rating]);
 
   useEffect(() => {
     setRating(currentRating);
