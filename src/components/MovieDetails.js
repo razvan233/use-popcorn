@@ -25,9 +25,10 @@ function MovieDetails({
         : 0;
 
       onMarkAsWatched((watchedMovies) => {
+        let result;
         if (isInWatchList)
-          return watchedMovies.filter((wm) => wm.imdbID !== selectedID);
-        return [
+          result = watchedMovies.filter((wm) => wm.imdbID !== selectedID);
+        result = [
           ...watchedMovies,
           {
             imdbID: movieDetails?.imdbID,
@@ -39,6 +40,7 @@ function MovieDetails({
             userRating: Number(rating) || 0,
           },
         ];
+        return result;
       });
       // clear any previous error on successful add/remove
       if (errorMessage) setErrorMessage(null);

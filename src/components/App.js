@@ -13,7 +13,11 @@ import MovieDetails from "./MovieDetails";
 
 export default function App() {
   const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState([]);
+  const [watched, setWatched] = useState(() => {
+    const watchedMovies = localStorage.getItem("watchedMovies");
+    if (watchedMovies === null) return;
+    return JSON.parse(watchedMovies);
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [query, setQuery] = useState("");
@@ -62,6 +66,10 @@ export default function App() {
     document.addEventListener("keydown", eventHandler);
     return () => document.removeEventListener("keydown", eventHandler);
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("watchedMovies", JSON.stringify(watched));
+  }, [watched]);
 
   return (
     <>
