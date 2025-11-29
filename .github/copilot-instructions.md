@@ -4,80 +4,90 @@ This file gives AI coding agents focused, actionable knowledge to be immediately
 
 **Big Picture**
 
-- **Project type**: A small React app bootstrapped with Create React App. Entry is `src/index.js`.
-- **Top-level state owner**: `src/components/App.js` holds the primary state: `movies` and `watched` (see `useState(tempMovieData)` and `useState(tempWatchedData)`). Add or change app-level features by updating `App` and passing setters down as props.
-- **UI composition**: Presentational components are small and composable. Notable components:
-  - `src/components/NavBar.js` (layout wrapper)
-  - `src/components/Main.js` (layout wrapper)
-  - `src/components/MovieList.js` → renders `Movie` items inside `Box`
-  - `src/components/Movie.js` → expects `movie` prop and `children` for inserted attributes
-  - `src/components/WatchList.js` → consumes `watched` prop
+- **Project type**: A small React app bootstrapped with Create React App. Entry is `src/index.js`. It's a movie search and watchlist app using the OMDB API.
+- **Architecture**: Centralized state in `src/components/App.js` manages:
+  - `movies`: search results from OMDB API (fetched live)
+  - `watched`: persistent list of movies marked as watched with user ratings
+  - `query`: search input value that triggers API fetches
+  - `selectedID`: currently selected movie for detail view
+- **Two-pane UI**: Search results on left → click movie → detail view/rating on right. WatchList displays when no movie selected.
+- **API integration**: Uses OMDB API via environment variables `REACT_APP_BASE_URL` and `REACT_APP_API_KEY` (see `src/utils/api.js`). Fetch logic in `App.js` and `MovieDetails.js` with error handling for missing config.
 
-**Data flow & patterns**
+**Core data flows**
 
-- Data originates from `src/utils/initialData.js` (temporary sample data). `App` initializes state with these values. Expect prop-drilling (App → MovieList/WatchList). When adding handlers, place `setMovies` / `setWatched` in `App` and pass functions down.
-- Utilities live in `src/utils/functions.js` (small helpers; e.g. `average`). Import with `import { average } from '../utils/functions';` in components.
-- Components often accept `children` for small insertions (see `Movie` component: `children` used for `InfoAttribute`). Follow this pattern for attribute injection.
+1. **Search flow**: User types in `Search` → sets `query` state → `useEffect` in `App` fetches movies from OMDB → updates `movies` state → renders in `MovieList`
+2. **Selection flow**: Click `Movie` → sets `selectedID` → renders `MovieDetails` panel fetching full movie data
+3. **Rating flow**: `MovieDetails` lets user rate with `StarRating` → `setWatched` callback updates watched list with rating
+4. **Deletion flow**: `WatchList` delete button → filters out movie by `imdbID` → updates `watched` state
 
-**Developer Workflows (what actually works here)**
+**Component hierarchy**
 
-- Start dev server: `npm start` (CRA default). App served at `http://localhost:3000`.
-- Run tests: `npm test` (CRA interactive runner). `src/setupTests.js` is present.
-- Build for production: `npm run build`.
-- Git and CI: no repo-specific hooks or CI configs present in this workspace. Keep commits small and focused; this is a small learning repo.
-
-**Project-specific conventions**
-
-- Files export default components (e.g. `export default function App(){}`) and small named exports for utilities/data.
-- Keep state near `App`. New derived or computed values should go in `src/utils` when reusable, or inside `App` when specific to the page.
-- Presentational vs container: most components are presentational; add logic in `App` or create a new container-level component when needed.
-- Styling: global CSS in `src/index.css` and classNames are used (e.g. `className="main"`, `className="list"`). Follow the existing class-name pattern.
-
-**Integration & extension points**
-
-- Search and dynamic data: there is a `Search` component present in `NavBar` but currently `App` passes no handler. To hook search to live data:
-  1. Add a handler in `App` that updates `movies` (e.g. `const handleSearch = (term) => { /* fetch or filter */ }`).
-  2. Pass `handleSearch` to `<Search onSearch={handleSearch} />`.
-- External API: none currently used. Poster image URLs come from `initialData`. If adding network calls, prefer fetch/async in `App` or a custom hook under `src/hooks`.
-
-**Examples (copyable patterns)**
-
-- Add a handler in `App` and pass down:
-
-```js
-// in src/components/App.js
-function App() {
-  const [movies, setMovies] = useState(tempMovieData);
-  const handleRemove = (imdbID) =>
-    setMovies(movies.filter((m) => m.imdbID !== imdbID));
-  return <MovieList movies={movies} onRemove={handleRemove} />;
-}
+```
+App (state owner)
+├─ NavBar (layout)
+│  ├─ Logo
+│  ├─ Search (onChange → setQuery)
+│  └─ NoOfResults
+└─ Main (layout)
+   ├─ Loader (when isLoading)
+   ├─ ErrorMessage (when error)
+   ├─ MovieList (onClick → setSelectedID)
+   │  └─ Movie (renders list item, accepts children)
+   │     └─ InfoAttribute (child insertion pattern)
+   └─ MovieDetails OR WatchList (conditional on selectedID)
+      ├─ MovieDetails (fetches via selectedID, has StarRating)
+      └─ WatchList (displays average stats, delete button)
 ```
 
-- Use `children` to insert attributes into `Movie` (pattern already used in `MovieList.js`):
+**Project-specific patterns**
 
-```jsx
-<Movie movie={movie}>
-  <InfoAttribute info={{ emoji: "🗓️", value: movie.Year }} />
-</Movie>
-```
+- **Children pattern**: `Movie` and `Box` components accept `children` for flexible composition. Used to inject `InfoAttribute` and `MovieInfo` without prop explosion. This is the core extension pattern.
+- **Updater functions**: When modifying watched list (e.g., adding rating), use `setWatched((prev) => [...])` not direct state. See `MovieDetails.js` lines 20–32 for pattern.
+- **Conditional rendering**: Use ternary operators for pane switching: `selectedID ? <MovieDetails /> : <WatchList />`
+- **Property extraction**: Movie data shapes differ between search results (basic) and details fetch (enriched with runtime, genres, etc.). Always check what fields are available.
 
-**Files to inspect first**
+**Developer Workflows**
 
-- `src/components/App.js` — central state and composition
-- `src/components/MovieList.js`, `src/components/Movie.js` — core rendering pattern
-- `src/components/WatchList.js` — consumes `watched` data
-- `src/utils/initialData.js` — sample data shapes
-- `src/utils/functions.js` — tiny utility functions
+- **Start dev**: `npm start` → http://localhost:3000 (CRA default, auto-reload on changes)
+- **Test**: `npm test` (CRA interactive runner). Only scaffolding present; no tests exist yet.
+- **Build**: `npm run build` (production bundle)
+- **Environment**: Create `.env` file with `REACT_APP_BASE_URL=https://www.omdbapi.com` and `REACT_APP_API_KEY=<your_key>`. Missing vars log errors but don't crash.
 
-**What not to assume**
+**Styling & UI conventions**
 
-- There is no backend/API wiring in the repo. Do not attempt to call a missing backend without adding config.
-- Tests are present only as CRA scaffolding; there are no component tests provided. Avoid presuming test coverage exists.
+- Global CSS only: `src/index.css` (no CSS modules, no styled-components)
+- BEM-style class names: `list`, `list-movies`, `btn-delete`, `details`, `summary`
+- Layout: `NavBar` and `Main` are wrapper components providing structure
+- Responsive: Uses flexbox patterns in CSS (not mobile-optimized, desktop-first)
 
-**Suggested first tasks for an agent**
+**Files to read first**
 
-- Add a simple `onRemove` handler to `App` and pass it to `Movie` to allow deletion of movies.
-- Hook `Search` to `App` by adding an `onSearch` prop and implementing a simple client-side filter.
+1. `src/components/App.js` — entire state flow and conditional rendering
+2. `src/components/MovieDetails.js` — API fetching pattern and updater function usage
+3. `src/components/WatchList.js` — computed stats using `average()` helper
+4. `src/utils/api.js` — environment variable setup
+5. `src/components/Movie.js` — children pattern example
 
-If anything here is unclear or you'd like me to expand examples (e.g., adding a small hook file or wiring Search), tell me which area to expand.
+**API integration specifics**
+
+- Base URL and key in `src/utils/api.js` read from environment
+- Two endpoints used:
+  - `/s=<query>` (search) returns array in `Search` field
+  - `/i=<imdbID>` (details) returns single movie object
+- Response validation checks `data.Response === "False"` before processing
+- Both App and MovieDetails independently fetch (no data sharing); considers network efficiency trade-off for simplicity
+
+**Known constraints & assumptions**
+
+- No local persistence for watched list (resets on page reload; use localStorage if persistence needed)
+- No pagination for search results (shows first page only)
+- No tests provided; CRA scaffolding only
+- No backend; OMDB is the single API source
+- StarRating component is a controlled input; updates trigger `onMarkAsWatched` callback
+
+**Adding new features**
+
+- **New UI pane**: Create component, add state in `App`, conditionally render in `Main`
+- **New handler**: Add state + function in `App`, pass down as prop callback
+- **New utility**: Export from `src/utils/functions.js`, import where needed (e.g., `import { average }`)
+- **New data on movies**: Add to fetch response handling or extend `tempWatchedData` shape
