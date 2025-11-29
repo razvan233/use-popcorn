@@ -85,6 +85,12 @@ function MovieDetails({
     );
   }, [rating, selectedID, onMarkAsWatched]);
 
+  useEffect(() => {
+    document.title = `MOVIE | ${movieDetails?.Title}`;
+
+    return () => (document.title = "usePopcorn");
+  }, [movieDetails]);
+
   if (isLoading) {
     return <Loader />;
   }
