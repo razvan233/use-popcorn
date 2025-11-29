@@ -21,6 +21,7 @@ export default function App() {
 
   useEffect(() => {
     setErrorMessage("");
+    const reqController = new AbortController();
 
     const fetchMovies = () => {
       const url = `${BASE_URL}/?apikey=${API_KEY}&s=${query}`;
@@ -28,18 +29,17 @@ export default function App() {
         console.error("Missing API configuration:", { BASE_URL, API_KEY });
         return;
       }
-      fetch(url)
+      fetch(url, { signal: reqController.signal })
         .then(async (res) => {
           const data = await res.json();
           if (data.Response === "False") throw new Error("Movie not found");
           setMovies(data.Search);
-          setIsLoading(false);
         })
         .catch((err) => {
           console.error("Fetch error:", err);
-          setIsLoading(false);
-          setErrorMessage(err.message);
-        });
+          if (err.name !== "AbortError") setErrorMessage(err.message);
+        })
+        .finally(() => setIsLoading(false));
     };
 
     if (query.length < 3) {
@@ -49,6 +49,8 @@ export default function App() {
     }
 
     fetchMovies();
+
+    return () => reqController.abort();
   }, [query]);
 
   return (

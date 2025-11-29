@@ -5,6 +5,7 @@ function Search({ query, onSearch }) {
       type="text"
       placeholder="Search movies..."
       value={query}
+      onChange={(e) => onSearch(e.target.value)}
       onKeyDown={(e) => {
         if (e.key === "Enter") {
           onSearch(e.target.value);
