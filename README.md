@@ -1,70 +1,163 @@
-# Getting Started with Create React App
+# use-popcorn
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A React app for searching and rating movies using the OMDB API. Built with Create React App for learning purposes.
 
-## Available Scripts
+## Overview
 
-In the project directory, you can run:
+**use-popcorn** lets you search for movies, view detailed information, and maintain a personal watchlist with your own ratings. The app features a two-pane interface: search results on the left, movie details and watchlist on the right.
 
-### `npm start`
+### Key Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- 🔍 Live movie search via OMDB API
+- 🎬 View detailed movie information (runtime, IMDb rating, genre, plot)
+- ⭐ Rate movies with a custom star rating system
+- 📋 Maintain a persistent watchlist with user ratings
+- 📊 View statistics on your watched movies (average ratings, total runtime)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Getting Started
 
-### `npm test`
+### Prerequisites
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- Node.js 14+
+- npm or yarn
 
-### `npm run build`
+### Installation
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. Clone the repository
+2. Install dependencies:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+   ```bash
+   npm install
+   ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+3. Create a `.env` file in the project root with your OMDB API credentials:
+   ```env
+   REACT_APP_BASE_URL=https://www.omdbapi.com
+   REACT_APP_API_KEY=your_api_key_here
+   ```
+   Get a free API key at [omdbapi.com](http://www.omdbapi.com/apikey.aspx)
 
-### `npm run eject`
+### Running the App
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```bash
+npm start
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Opens [http://localhost:3000](http://localhost:3000) in your browser. The app reloads on code changes.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Running Tests
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```bash
+npm test
+```
 
-## Learn More
+Launches the interactive test runner. Note: Only CRA scaffolding is present; no test coverage currently exists.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Building for Production
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```bash
+npm run build
+```
 
-### Code Splitting
+Creates an optimized production build in the `build` folder.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Project Structure
 
-### Analyzing the Bundle Size
+```
+src/
+├── components/
+│   ├── App.js              # Main state container
+│   ├── NavBar.js           # Header with logo and search
+│   ├── Search.js           # Search input (filters by query on Enter)
+│   ├── MovieList.js        # Results list from OMDB
+│   ├── Movie.js            # Individual movie item (clickable)
+│   ├── MovieDetails.js     # Full movie details with rating interface
+│   ├── WatchList.js        # User's watched movies with stats
+│   ├── StarRating.js       # Custom star rating component
+│   ├── Box.js              # Layout wrapper
+│   └── [other components]
+├── utils/
+│   ├── api.js              # OMDB API configuration
+│   ├── functions.js        # Utility functions (e.g., average)
+│   └── initialData.js      # Sample movie data
+├── index.js                # React entry point
+└── index.css               # Global styles
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Architecture
 
-### Making a Progressive Web App
+### State Management
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+All state is centralized in `App.js`:
 
-### Advanced Configuration
+- `movies` - Search results from OMDB (fetched on query change)
+- `watched` - User's rated movies (initialized from `tempWatchedData`)
+- `query` - Current search input
+- `selectedID` - Currently viewed movie
+- `isLoading` - Fetch status
+- `errorMessage` - API error messages
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### Data Flows
 
-### Deployment
+1. **Search**: Type query → API fetch → Display results in MovieList
+2. **Selection**: Click movie → Fetch full details → Display in MovieDetails pane
+3. **Rating**: Use StarRating → Update watched list via callback
+4. **Management**: Delete from WatchList → Filter and update state
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## Development Patterns
 
-### `npm run build` fails to minify
+### Prop Drilling
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Data flows from `App` → components via props. Handlers are passed down and called from child components.
+
+### Children Pattern
+
+Components like `Movie` and `Box` accept `children` for flexible content injection:
+
+```jsx
+<Movie movie={movie}>
+  <InfoAttribute info={{ emoji: "🗓️", value: movie.Year }} />
+</Movie>
+```
+
+### Updater Functions
+
+When modifying watched list, use functional setState:
+
+```jsx
+setWatched((prev) => [...prev, newMovie]);
+```
+
+## API Integration
+
+Fetches are performed in:
+
+- `App.js` - Search movies on query change
+- `MovieDetails.js` - Fetch full movie data on selection
+
+Missing `.env` variables log errors but don't crash the app.
+
+## Styling
+
+- Global styles only (`src/index.css`)
+- BEM-style class names: `list`, `btn-delete`, `details`
+- Flexbox-based responsive layout
+
+## Future Enhancements
+
+- [ ] LocalStorage persistence for watchlist
+- [ ] Search pagination
+- [ ] Advanced filtering and sorting
+- [ ] Movie recommendations
+- [ ] User authentication
+
+## Technologies
+
+- React 19
+- Create React App
+- OMDB API
+- CSS3 (Flexbox)
+
+## License
+
+This project is part of the Ultimate React Course.
