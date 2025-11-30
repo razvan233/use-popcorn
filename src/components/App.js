@@ -11,13 +11,10 @@ import Loader from "./Loader";
 import ErrorMessage from "./ErrorMessage";
 import MovieDetails from "./MovieDetails";
 import { useMovies } from "../hooks/useMovies";
+import { useLocalStorage } from "../hooks/useLocalStorage";
 
 export default function App() {
-  const [watched, setWatched] = useState(() => {
-    const watchedMovies = localStorage.getItem("watchedMovies");
-    if (watchedMovies === null) return;
-    return JSON.parse(watchedMovies);
-  });
+  const [watched, setWatched] = useLocalStorage([], "watchedMovies");
   const [query, setQuery] = useState("");
   const [selectedID, setSelectedID] = useState(null);
 
@@ -38,15 +35,11 @@ export default function App() {
     return () => document.removeEventListener("keydown", eventHandler);
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem("watchedMovies", JSON.stringify(watched));
-  }, [watched]);
-
   return (
     <>
       <NavBar>
         <Logo />
-        <Search onSearch={setQuery} />
+        <Search query={query} onSearch={setQuery} />
         <NoOfResults moviesLength={movies.length} />
       </NavBar>
       <Main>
