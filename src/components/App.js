@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import NavBar from "./NavBar";
 import Main from "./Main";
 import Logo from "./Logo";
@@ -10,54 +10,25 @@ import { API_KEY, BASE_URL } from "../utils/api";
 import Loader from "./Loader";
 import ErrorMessage from "./ErrorMessage";
 import MovieDetails from "./MovieDetails";
+import { useMovies } from "../hooks/useMovies";
 
 export default function App() {
-  const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState(() => {
     const watchedMovies = localStorage.getItem("watchedMovies");
     if (watchedMovies === null) return;
     return JSON.parse(watchedMovies);
   });
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
   const [query, setQuery] = useState("");
   const [selectedID, setSelectedID] = useState(null);
 
-  useEffect(() => {
-    setErrorMessage("");
-    const reqController = new AbortController();
+  const handleSelectMovie = useCallback(() => setSelectedID(0), []);
 
-    const fetchMovies = () => {
-      const url = `${BASE_URL}/?apikey=${API_KEY}&s=${query}`;
-      if (!BASE_URL || !API_KEY) {
-        console.error("Missing API configuration:", { BASE_URL, API_KEY });
-        return;
-      }
-      fetch(url, { signal: reqController.signal })
-        .then(async (res) => {
-          const data = await res.json();
-          if (data.Response === "False") throw new Error("Movie not found");
-          setMovies(data.Search);
-        })
-        .catch((err) => {
-          if (err.name === "AbortError") return;
-          setErrorMessage(err.message);
-          console.error("Fetch error:", err);
-        })
-        .finally(() => setIsLoading(false));
-    };
-
-    if (query.length < 3) {
-      setMovies([]);
-      setIsLoading(false);
-      return;
-    }
-
-    setSelectedID(0);
-    fetchMovies();
-
-    return () => reqController.abort();
-  }, [query]);
+  const { movies, isLoading, errorMessage } = useMovies(
+    query,
+    BASE_URL,
+    API_KEY,
+    handleSelectMovie
+  );
 
   useEffect(() => {
     const eventHandler = (e) => {
