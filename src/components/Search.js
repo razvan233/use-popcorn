@@ -10,8 +10,9 @@ function Search({ query, onSearch }) {
         inputRef.current.focus();
         onSearch("");
       }
-      document.addEventListener("keydown", handleKeyEvent);
     };
+    inputRef?.current.focus();
+    document.addEventListener("keydown", handleKeyEvent);
     return () => document.removeEventListener("keydown", handleKeyEvent);
   }, [onSearch]);
 
