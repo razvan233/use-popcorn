@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import NavBar from "./NavBar";
 import Main from "./Main";
 import Logo from "./Logo";
@@ -12,6 +12,7 @@ import ErrorMessage from "./ErrorMessage";
 import MovieDetails from "./MovieDetails";
 import { useMovies } from "../hooks/useMovies";
 import { useLocalStorage } from "../hooks/useLocalStorage";
+import { useKey } from "../hooks/useKey";
 
 export default function App() {
   const [watched, setWatched] = useLocalStorage([], "watchedMovies");
@@ -27,13 +28,11 @@ export default function App() {
     handleSelectMovie
   );
 
-  useEffect(() => {
-    const eventHandler = (e) => {
-      if (e.key === "Escape") setSelectedID(0);
-    };
-    document.addEventListener("keydown", eventHandler);
-    return () => document.removeEventListener("keydown", eventHandler);
-  }, []);
+  const eventHandler = (e) => {
+    if (e.key === "Escape") setSelectedID(0);
+  };
+
+  useKey("keydown", eventHandler);
 
   return (
     <>

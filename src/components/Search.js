@@ -1,20 +1,20 @@
-import { useEffect, useRef } from "react";
+import { useRef, useCallback } from "react";
+import { useKey } from "../hooks/useKey";
+
 function Search({ query, onSearch }) {
   const inputRef = useRef(null);
 
-  useEffect(() => {
-    const handleKeyEvent = (e) => {
-      if (!inputRef.current) return;
-      if (document.activeElement === inputRef.current) return;
-      if (e.key === "Enter") {
-        inputRef.current.focus();
-        onSearch("");
-      }
-    };
-    inputRef?.current.focus();
-    document.addEventListener("keydown", handleKeyEvent);
-    return () => document.removeEventListener("keydown", handleKeyEvent);
-  }, [onSearch]);
+  const handleKeyEvent = (e) => {
+    if (!inputRef.current) return;
+    if (document.activeElement === inputRef.current) return;
+    if (e.key === "Enter") {
+      inputRef.current.focus();
+      onSearch("");
+    }
+  };
+
+  const focusRef = useCallback(() => inputRef?.current.focus(), []);
+  useKey("keydown", handleKeyEvent, focusRef);
 
   return (
     <input
